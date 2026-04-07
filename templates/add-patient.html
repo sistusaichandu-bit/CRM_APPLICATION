@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+
+{% block title %}Add Patient - LeadFlow{% endblock %}
+{% block page_title %}Add Patient{% endblock %}
+
+{% block content %}
+<div class="p-8">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-slate-900">Add New Patient</h1>
+        <p class="text-slate-600 mt-2">Register a new patient to the clinic</p>
+    </div>
+
+    <!-- Form Container -->
+    <div class="bg-white rounded-2xl shadow-lg p-8 max-w-2xl">
+        <form method="POST" action="{{ url_for('add_patient') }}" class="space-y-6">
+            <!-- Full Name -->
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-2">Full Name</label>
+                <input type="text" name="name" placeholder="Enter patient's full name" 
+                    class="w-full px-4 py-3 border border-slate-300 rounded-xl 
+                    focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" required>
+            </div>
+
+            <!-- Email Address -->
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-2">Email Address</label>
+                <input type="email" name="email" placeholder="Enter email address" 
+                    class="w-full px-4 py-3 border border-slate-300 rounded-xl 
+                    focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" required>
+            </div>
+
+            <!-- Phone Number -->
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-2">Phone Number</label>
+                <input type="tel" name="phone" placeholder="Enter phone number" 
+                    class="w-full px-4 py-3 border border-slate-300 rounded-xl 
+                    focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" required>
+            </div>
+
+            <!-- Problem/Condition -->
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-2">Problem/Condition</label>
+                <textarea name="problem" placeholder="Describe the patient's problem or condition" 
+                    class="w-full px-4 py-3 border border-slate-300 rounded-xl 
+                    focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" rows="3"></textarea>
+            </div>
+
+            <!-- Assigned Doctor -->
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-2">Assigned Doctor</label>
+                <select name="doctor" class="w-full px-4 py-3 border border-slate-300 rounded-xl 
+                    focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" required>
+                    <option value="">Select Doctor</option>
+                    {% for doctor in doctors %}
+                    <option value="{{ doctor.doctor_id }}">{{ doctor.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Date of Birth -->
+            <div>
+                <label class="block text-sm font-semibold text-slate-700 mb-2">Date of Birth</label>
+                <input type="date" name="dob" 
+                    class="w-full px-4 py-3 border border-slate-300 rounded-xl 
+                    focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+            </div>
+
+            <!-- Form Buttons -->
+            <div class="flex gap-4 pt-6">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 
+                    rounded-xl font-semibold transition-all duration-200 shadow-md hover:shadow-lg">
+                    Create Patient
+                </button>
+                <a href="{{ url_for('patients') }}" class="bg-slate-100 hover:bg-slate-200 text-slate-900 px-8 py-3 
+                    rounded-xl font-semibold transition-all duration-200 inline-block">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+        <nav id="navbar" class="navbar">
+            <div class="navbar-left">
+                <button id="sidebar-toggle-btn" class="sidebar-toggle-btn" title="Toggle Sidebar">
+                    <span class="hamburger-icon">☰</span>
+                </button>
+                <div class="navbar-logo">
+                    <span class="logo-icon">🏥</span>
+                    <h1 class="logo-text">Healthcare CRM</h1>
+                </div>
+            </div>
+            <div class="navbar-right">
+                <button class="navbar-icon-btn" title="Notifications">
+                    <span class="icon">🔔</span>
+                    <span class="badge">5</span>
+                </button>
+                <div class="navbar-user-menu">
+                    <button id="user-menu-btn" class="user-profile-btn">
+                        <span class="user-avatar">A</span>
+                        <span class="user-info">
+                            <span class="user-name">Admin</span>
+                            <span class="user-role">Administrator</span>
+                        </span>
+                        <span class="dropdown-icon">▼</span>
+                    </button>
+                    <div id="user-dropdown" class="user-dropdown hidden">
+                        <div class="dropdown-header">
+                            <span class="dropdown-name">Admin User</span>
+                            <span class="dropdown-role">Administrator</span>
+                        </div>
+                        <hr class="dropdown-divider">
+                        <a href="#profile" class="dropdown-item">
+                            <span class="item-icon">👤</span>
+                            <span class="item-text">My Profile</span>
+                        </a>
+                        <a href="#settings" class="dropdown-item">
+                            <span class="item-icon">⚙️</span>
+                            <span class="item-text">Settings</span>
+                        </a>
+                        <hr class="dropdown-divider">
+                        <a href="login.html" class="dropdown-item logout-item">
+                            <span class="item-icon">🚪</span>
+                            <span class="item-text">Logout</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- MAIN LAYOUT - SIDEBAR + CONTENT -->
+        <div class="main-wrapper">
+            
+            <!-- SIDEBAR NAVIGATION -->
+            <aside id="sidebar" class="sidebar">
+                <div class="sidebar-header">
+                    <h2 class="sidebar-title">Menu</h2>
+                </div>
+                <div class="sidebar-content">
+                    <nav class="sidebar-nav">
+                        <div class="menu-section">
+                            <a href="dashboard.html" class="menu-item menu-link" data-page="dashboard">
+                                <span class="menu-icon">📊</span>
+                                <span class="menu-label">Dashboard</span>
+                            </a>
+                        </div>
+                        <div class="menu-section">
+                            <h3 class="menu-section-title">Healthcare Staff</h3>
+                            <a href="doctors.html" class="menu-item menu-link" data-page="doctors">
+                                <span class="menu-icon">👨‍⚕️</span>
+                                <span class="menu-label">Doctors</span>
+                            </a>
+                        </div>
+                        <div class="menu-section">
+                            <h3 class="menu-section-title">Patients</h3>
+                            <a href="patients.html" class="menu-item menu-link active" data-page="patients">
+                                <span class="menu-icon">👥</span>
+                                <span class="menu-label">Patients</span>
+                            </a>
+                        </div>
+                        <div class="menu-section">
+                            <h3 class="menu-section-title">Appointments</h3>
+                            <a href="visits.html" class="menu-item menu-link" data-page="visits">
+                                <span class="menu-icon">📅</span>
+                                <span class="menu-label">Visits</span>
+                            </a>
+                        </div>
+                    </nav>
+                </div>
+                <div class="sidebar-footer">
+                    <a href="login.html" class="logout-link" title="Logout">
+                        <span class="logout-icon">🚪</span>
+                        <span class="logout-text">Logout</span>
+                    </a>
+                </div>
+            </aside>
+
+            <!-- MAIN CONTENT -->
+            <main id="main-content" class="main-content">
+                
+                <!-- PAGE HEADER -->
+                <div class="page-header">
+                    <div class="page-header-content">
+                        <h1 class="page-title">Add Patient</h1>
+                        <p class="page-subtitle">Register a new patient record</p>
+                    </div>
+                </div>
+
+                <!-- PATIENT FORM -->
+                <section class="card form-card">
+                    <h3 class="card-title">Patient Information</h3>
+                    <form class="form-container">
+                        
+                        <!-- Patient Name -->
+                        <div class="form-group">
+                            <label for="patient-name" class="form-label">Patient Name *</label>
+                            <input 
+                                type="text" 
+                                id="patient-name" 
+                                class="form-input" 
+                                placeholder="Enter patient's full name"
+                                required
+                            />
+                            <small class="form-hint">Full name as shown in identification</small>
+                        </div>
+
+                        <!-- Medical Problem / Issue -->
+                        <div class="form-group">
+                            <label for="patient-problem" class="form-label">Medical Problem / Issue *</label>
+                            <select id="patient-problem" class="form-input" required>
+                                <option value="">Select problem category</option>
+                                <option value="Skin">Skin Condition</option>
+                                <option value="Dental">Dental Issue</option>
+                                <option value="Eye">Eye Problem</option>
+                                <option value="General">General Checkup</option>
+                                <option value="Ortho">Orthopedic</option>
+                                <option value="Cardio">Cardiac</option>
+                            </select>
+                            <small class="form-hint">Select the primary health concern</small>
+                        </div>
+
+                        <!-- Assigned Doctor -->
+                        <div class="form-group">
+                            <label for="patient-doctor" class="form-label">Assigned Doctor *</label>
+                            <select id="patient-doctor" class="form-input" required>
+                                <option value="">Select a doctor</option>
+                                <option value="Dr. Alice Smith">Dr. Alice Smith - General</option>
+                                <option value="Dr. Brian Johnson">Dr. Brian Johnson - Dental</option>
+                                <option value="Dr. Cathy Williams">Dr. Cathy Williams - Eye</option>
+                            </select>
+                            <small class="form-hint">Choose the doctor responsible for this patient's care</small>
+                        </div>
+
+                        <!-- Initial Status -->
+                        <div class="form-group">
+                            <label for="patient-status" class="form-label">Initial Status *</label>
+                            <select id="patient-status" class="form-input" required>
+                                <option value="active">Active</option>
+                                <option value="follow-up">Follow-up Required</option>
+                                <option value="referred">Needs Specialist Referral</option>
+                            </select>
+                            <small class="form-hint">Set the initial status for this patient</small>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="form-actions">
+                            <a href="patients.html" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Save Patient</button>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- INFO BOX -->
+                <div class="card info-box">
+                    <h3 class="info-title">ℹ️ Patient Registration Guide</h3>
+                    <p>
+                        When registering a new patient:
+                    </p>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>Ensure the patient's full name matches their identification</li>
+                        <li>Select the appropriate medical problem category for initial diagnosis</li>
+                        <li>Assign a qualified doctor based on specialization</li>
+                        <li>Set the initial status (Active = routine care, Follow-up = needs revisit, Referred = specialist needed)</li>
+                        <li>The system will track all visits and referrals for this patient</li>
+                    </ul>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <script src="../static/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="LeadFlow - CRM for Skin Clinics">
+    <title>{% block title %}LeadFlow - CRM for Skin Clinics{% endblock %}</title>
+    
+    <!-- Google Fonts - Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for analytics charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+            min-height: 100vh;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+        }
+        
+        /* Premium Sidebar Styling */
+        aside {
+            background: linear-gradient(180deg, #ffffff 0%, #fafafe 100%);
+            border-right: 1px solid rgba(148, 163, 184, 0.1);
+        }
+        
+        .sidebar-link {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        
+        .sidebar-link::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            width: 4px;
+            height: 0;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            border-radius: 0 4px 4px 0;
+            transition: height 0.3s ease;
+        }
+        
+        .sidebar-link.active {
+            background: linear-gradient(90deg, rgba(102, 126, 234, 0.1) 0%, rgba(102, 126, 234, 0.05) 100%);
+            color: #667eea;
+            border-radius: 0.75rem;
+        }
+        
+        .sidebar-link.active::before {
+            height: 100%;
+        }
+        
+        .sidebar-link:hover:not(.active) {
+            background: rgba(148, 163, 184, 0.08);
+            color: #667eea;
+        }
+        
+        .sidebar-link:hover:not(.active)::before {
+            height: 50%;
+        }
+        
+        /* Premium top navbar */
+        header {
+            background: linear-gradient(90deg, #ffffff 0%, #fafafe 100%);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+        }
+        
+        .table-hover-row {
+            transition: background-color 0.2s ease;
+        }
+        
+        .table-hover-row:hover {
+            background-color: #f1f5f9;
+        }
+
+        /* Modern Glassy Cards */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid rgba(148, 163, 184, 0.28);
+            box-shadow: 0 16px 35px rgba(15, 23, 42, 0.08);
+            backdrop-filter: blur(18px);
+        }
+
+        .gradient-card {
+            border-radius: 1rem;
+            padding: 1.25rem;
+            color: #fff;
+            box-shadow: 0 16px 35px rgba(15, 23, 42, 0.12);
+        }
+
+        .gradient-card .metric-value {
+            font-size: 2.25rem;
+            font-weight: 700;
+        }
+
+        .gradient-card .metric-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            opacity: 0.85;
+        }
+
+        .metric-secondary {
+            font-size: 0.85rem;
+            color: rgba(15, 23, 42, 0.7);
+        }
+        
+        /* Section Headers */
+        .text-xs.font-semibold.uppercase {
+            color: #a1aec6;
+            letter-spacing: 1px;
+        }
+        
+        /* Premium Logo */
+        aside > div > img {
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        aside > div > img:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 32px rgba(102, 126, 234, 0.3);
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50">
+    <div class="flex h-screen overflow-hidden">
+        
+        <!-- SIDEBAR -->
+        <aside class="fixed left-0 top-0 h-full w-60 bg-white shadow-md z-40 overflow-y-auto">
+            
+            <!-- Logo Section -->
+            <!-- Logo Section -->
+<div class="border-b border-slate-200 px-6 py-6 flex items-center gap-3">
+
+    <img src="{{ url_for('static', filename='images/leadflow-logo.png') }}" 
+         alt="LeadFlow Logo"
+         class="h-10 w-10 object-contain rounded-xl shadow-md border border-slate-200 p-1 bg-white">
+
+    <div>
+        <h1 class="font-bold text-lg text-slate-900">LeadFlow</h1>
+        <p class="text-xs text-slate-500">Clinic CRM</p>
+    </div>
+
+</div>
+            
+            <!-- Navigation Menu -->
+            <nav class="px-3 py-6 space-y-1 flex-1 overflow-y-auto">
+
+                <!-- Main Dashboard -->
+                <a href="{{ url_for('dashboard') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-700 rounded-xl">
+                    <span class="text-lg">📊</span>
+                    <span>Dashboard</span>
+                </a>
+
+                <!-- Core CRM -->
+                <a href="{{ url_for('leads') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-700 rounded-xl">
+                    <span class="text-lg">🎯</span>
+                    <span>Leads</span>
+                </a>
+
+                <a href="{{ url_for('followups') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-700 rounded-xl">
+                    <span class="text-lg">🔔</span>
+                    <span>Follow-Ups</span>
+                </a>
+
+                <!-- Management Section -->
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 px-4 mt-6 mb-3">Management</p>
+                
+                <a href="{{ url_for('appointments') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-700 rounded-xl">
+                    <span class="text-lg">📅</span>
+                    <span>Appointments</span>
+                </a>
+
+                <a href="{{ url_for('doctors') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-700 rounded-xl">
+                    <span class="text-lg">👨‍⚕️</span>
+                    <span>Doctors</span>
+                </a>
+
+                <a href="{{ url_for('patients') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-700 rounded-xl">
+                    <span class="text-lg">👥</span>
+                    <span>Patients</span>
+                </a>
+
+                <!-- Finance Section -->
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 px-4 mt-6 mb-3">Finance</p>
+                
+                <a href="{{ url_for('invoices') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-700 rounded-xl">
+                    <span class="text-lg">💳</span>
+                    <span>Invoices</span>
+                </a>
+
+                <a href="{{ url_for('closed_cases') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-700 rounded-xl">
+                    <span class="text-lg">✅</span>
+                    <span>Closed Cases</span>
+                </a>
+
+                <!-- Marketing Section -->
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 px-4 mt-6 mb-3">Marketing</p>
+                
+                <a href="{{ url_for('campaigns') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-700 rounded-xl">
+                    <span class="text-lg">📢</span>
+                    <span>Campaigns</span>
+                </a>
+
+                <a href="{{ url_for('referrals') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-700 rounded-xl">
+                    <span class="text-lg">🔗</span>
+                    <span>Referrals</span>
+                </a>
+
+                <!-- Management Section -->
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 px-4 mt-6 mb-3">Management</p>
+                
+                <a href="{{ url_for('appointments') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-700 rounded-xl">
+                    <span class="text-lg">📅</span>
+                    <span>Appointments</span>
+                </a>
+
+                <a href="{{ url_for('doctors') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-700 rounded-xl">
+                    <span class="text-lg">👨‍⚕️</span>
+                    <span>Doctors</span>
+                </a>
+
+                <a href="{{ url_for('patients') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-700 rounded-xl">
+                    <span class="text-lg">👥</span>
+                    <span>Patients</span>
+                </a>
+
+                <!-- Finance Section -->
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 px-4 mt-6 mb-3">Finance</p>
+                
+                <a href="{{ url_for('invoices') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-700 rounded-xl">
+                    <span class="text-lg">💳</span>
+                    <span>Invoices</span>
+                </a>
+
+                <a href="{{ url_for('closed_cases') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-700 rounded-xl">
+                    <span class="text-lg">✅</span>
+                    <span>Closed Cases</span>
+                </a>
+
+                <!-- Marketing Section -->
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 px-4 mt-6 mb-3">Marketing</p>
+                
+                <a href="{{ url_for('campaigns') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-700 rounded-xl">
+                    <span class="text-lg">📢</span>
+                    <span>Campaigns</span>
+                </a>
+
+                <a href="{{ url_for('referrals') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-700 rounded-xl">
+                    <span class="text-lg">🔗</span>
+                    <span>Referrals</span>
+                </a>
+
+            </nav>
+            
+            <!-- Logout Button -->
+            <div class="border-t border-slate-200 p-3 mt-auto">
+                <a href="{{ url_for('logout') }}" class="flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200">
+                    <span class="text-lg">🚪</span>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </aside>
+        
+        <!-- MAIN CONTENT -->
+        <div class="ml-60 flex-1 flex flex-col overflow-hidden">
+            
+            <!-- TOP NAVBAR -->
+            <header class="sticky top-0 z-30 bg-white shadow-sm border-b border-slate-200 h-20 flex items-center justify-between px-8">
+                
+                <!-- Left: App Title -->
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900">LeadFlow</h2>
+                </div>
+                
+                <!-- Right: Actions -->
+                <div class="flex items-center gap-6">
+                    <!-- Notifications -->
+                    <button class="relative p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all duration-200">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2 2 0 0018 14.828V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.828a2 2 0 00-.595 1.42L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                        </svg>
+                        <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                    </button>
+                    
+                    <!-- User Profile -->
+                    <div class="flex items-center gap-3 pl-6 border-l border-slate-200">
+                        <div class="hidden sm:block text-right">
+                            <p class="text-sm font-semibold text-slate-900">{{ current_user or 'User' }}</p>
+                            <p class="text-xs text-slate-500">{{ user_role or 'Staff' }}</p>
+                        </div>
+                        <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 via-blue-600 to-cyan-500 flex items-center justify-center text-white font-semibold">
+                            {{ (current_user or 'U')[0] | upper }}
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- PAGE CONTENT -->
+            <main class="flex-1 overflow-y-auto p-8">
+                {% block content %}
+                <!-- Default content will be replaced by extending templates -->
+                {% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Highlight the active sidebar item
+        const currentPath = window.location.pathname;
+        document.querySelectorAll('.sidebar-link').forEach(link => {
+            const href = link.getAttribute('href');
+            if (href === currentPath) {
+                link.classList.add('active');
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,427 @@
+{% extends 'base.html' %}
+
+{% block title %}Campaigns - LeadFlow{% endblock %}
+
+{% block page_title %}Campaigns{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2 class="text-2xl font-bold">Campaigns</h2>
+    <p class="text-sm text-slate-500">Marketing campaigns, scraped-lead re-engagement and campaign logs</p>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+    <div class="bg-white rounded-lg shadow p-4">
+        <h3 class="text-lg font-semibold mb-3">Start New Campaign</h3>
+        <form method="POST" action="{{ url_for('create_campaign') }}" class="space-y-3">
+            <input name="name" placeholder="Campaign name" class="w-full px-3 py-2 border rounded" required />
+            <input name="service_filter" placeholder="Service filter (optional)" class="w-full px-3 py-2 border rounded" />
+            <textarea name="message" rows="4" placeholder="Enter campaign message" class="w-full px-3 py-2 border rounded" required></textarea>
+            <button type="submit" class="btn btn-primary">Create Campaign</button>
+        </form>
+    </div>
+    <div class="bg-white rounded-lg shadow p-4">
+        <h3 class="text-lg font-semibold mb-3">Campaign Summary</h3>
+        <p class="text-sm text-slate-500">Existing campaigns are listed below. Use Run to re-engage scraped leads by service.</p>
+        <div class="mt-4">
+            <div class="grid grid-cols-2 gap-2 text-xs text-slate-600">
+                <div>Total campaigns: {{ campaigns|length }}</div>
+                <div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="bg-white rounded-lg shadow p-4 overflow-x-auto">
+    <table class="w-full text-sm">
+        <thead class="border-b text-slate-700">
+            <tr>
+                <th class="px-3 py-2 text-left">Campaign</th>
+                <th class="px-3 py-2 text-left">Service</th>
+                <th class="px-3 py-2 text-center">Status</th>
+                <th class="px-3 py-2 text-center">Sent</th>
+                <th class="px-3 py-2 text-center">Success</th>
+                <th class="px-3 py-2 text-center">Failed</th>
+                <th class="px-3 py-2 text-center">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for c in campaigns %}
+            <tr class="border-b hover:bg-slate-50">
+                <td class="px-3 py-2">{{ c.name }}</td>
+                <td class="px-3 py-2">{{ c.service_filter or 'All' }}</td>
+                <td class="px-3 py-2 text-center">{{ c.status }}</td>
+                <td class="px-3 py-2 text-center">{{ c.total_sent or 0 }}</td>
+                <td class="px-3 py-2 text-center">{{ c.sent_success or 0 }}</td>
+                <td class="px-3 py-2 text-center">{{ c.sent_failed or 0 }}</td>
+                <td class="px-3 py-2 text-center">
+                    <form method="POST" action="{{ url_for('run_campaign', campaign_id=c.campaign_id) }}" class="inline">
+                        <button type="submit" class="btn btn-secondary btn-sm">Run</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7" class="px-3 py-5 text-center text-slate-500">No campaigns found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campaigns - LeadFlow</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.tailwindcss.com" rel="stylesheet">
+    
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { background-color: #f9fafb; }
+        
+        .sidebar { position: fixed; left: 0; top: 0; width: 260px; height: 100vh; background: white; border-right: 1px solid #e5e7eb; overflow-y: auto; padding-top: 20px; z-index: 40; }
+        .sidebar-logo { padding: 0 24px 32px 24px; border-bottom: 1px solid #e5e7eb; margin-bottom: 24px; }
+        .sidebar-logo-item { display: flex; align-items: center; gap: 12px; font-weight: 700; color: #111827; text-decoration: none; }
+        .sidebar-logo-img { width: 40px; height: 40px; border-radius: 8px; object-fit: contain; }
+        .sidebar-menu { padding: 0 12px; }
+        .menu-section-title { font-size: 12px; font-weight: 600; text-transform: uppercase; color: #9ca3af; padding: 16px 12px 8px 12px; margin-top: 16px; }
+        .menu-item { display: flex; align-items: center; gap: 12px; padding: 12px 12px; margin: 4px 0; border-radius: 8px; color: #4b5563; text-decoration: none; font-size: 14px; font-weight: 500; transition: all 0.3s ease; }
+        .menu-item:hover { background-color: #f3f4f6; color: #2563eb; }
+        .menu-item.active { background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(14, 165, 233, 0.05) 100%); color: #2563eb; border-left: 3px solid #2563eb; padding-left: 9px; }
+        .menu-icon { font-size: 18px; width: 24px; display: flex; align-items: center; justify-content: center; }
+        
+        .navbar { position: fixed; top: 0; left: 260px; right: 0; height: 70px; background: white; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; z-index: 30; }
+        .navbar-right { display: flex; align-items: center; gap: 20px; }
+        .navbar-button { background: none; border: none; cursor: pointer; padding: 8px; border-radius: 6px; color: #4b5563; position: relative; font-size: 20px; transition: all 0.3s ease; }
+        .navbar-button:hover { background-color: #f3f4f6; color: #2563eb; }
+        .notification-badge { position: absolute; top: 4px; right: 4px; width: 18px; height: 18px; background-color: #ef4444; color: white; border-radius: 50%; font-size: 10px; display: flex; align-items: center; justify-content: center; font-weight: 600; }
+        .user-profile { display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 8px 12px; border-radius: 8px; transition: all 0.3s ease; }
+        .user-profile:hover { background-color: #f3f4f6; }
+        .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%); color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; }
+        
+        .main-content { margin-left: 260px; margin-top: 70px; padding: 32px; }
+        .page-header { margin-bottom: 32px; display: flex; justify-content: space-between; align-items: start; }
+        .page-title { font-size: 28px; font-weight: 700; color: #111827; }
+        .page-subtitle { font-size: 14px; color: #6b7280; margin-top: 4px; }
+        
+        .campaigns-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
+        .campaign-card { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); transition: all 0.3s ease; }
+        .campaign-card:hover { box-shadow: 0 10px 25px rgba(37, 99, 235, 0.1); border-color: #2563eb; transform: translateY(-2px); }
+        
+        .campaign-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px; }
+        .campaign-title { font-size: 18px; font-weight: 600; color: #111827; }
+        .campaign-status { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .status-sent { background-color: rgba(34, 197, 94, 0.1); color: #10b981; }
+        .status-scheduled { background-color: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+        .status-failed { background-color: rgba(239, 68, 68, 0.1); color: #ef4444; }
+        
+        .campaign-detail { margin-bottom: 12px; display: flex; justify-content: space-between; font-size: 14px; }
+        .campaign-detail-label { color: #6b7280; font-weight: 500; }
+        .campaign-detail-value { color: #111827; font-weight: 600; }
+        
+        .progress-bar { width: 100%; height: 8px; background-color: #e5e7eb; border-radius: 4px; margin-top: 8px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #2563eb 0%, #0ea5e9 100%); border-radius: 4px; }
+        
+        .campaign-footer { margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb; display: flex; gap: 8px; }
+        
+        .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 8px; font-weight: 600; font-size: 14px; border: none; cursor: pointer; transition: all 0.3s ease; text-decoration: none; }
+        .btn-primary { background: linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%); color: white; }
+        .btn-primary:hover { box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3); transform: translateY(-2px); }
+        .btn-secondary { background-color: #f3f4f6; color: #374151; }
+        .btn-secondary:hover { background-color: #e5e7eb; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        
+        .modal { display: none; position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.5); z-index: 50; align-items: center; justify-content: center; }
+        .modal.active { display: flex; }
+        .modal-content { background: white; border-radius: 12px; padding: 32px; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto; }
+        .modal-header { margin-bottom: 24px; }
+        .modal-title { font-size: 24px; font-weight: 700; color: #111827; margin-bottom: 8px; }
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 14px; }
+        .form-input { width: 100%; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 14px; transition: all 0.3s ease; }
+        .form-input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+        .form-textarea { width: 100%; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 14px; font-family: 'Inter', sans-serif; min-height: 120px; resize: vertical; }
+        .form-textarea:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+        
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .navbar { left: 0; }
+            .main-content { margin-left: 0; padding: 20px; }
+            .page-header { flex-direction: column; }
+            .campaigns-cards { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <a href="dashboard.html" class="sidebar-logo-item">
+                <img src="{{ url_for('static', filename='images/leadflow-logo.png') }}" alt="LeadFlow" class="sidebar-logo-img">
+                <div>
+                    <div style="font-size: 16px;">LeadFlow</div>
+                    <div style="font-size: 10px; font-weight: 400; color: #9ca3af;">Skin Clinics CRM</div>
+                </div>
+            </a>
+        </div>
+        
+        <nav class="sidebar-menu">
+            <a href="dashboard.html" class="menu-item">
+                <span class="menu-icon">📊</span>
+                <span>Dashboard</span>
+            </a>
+            
+            <div class="menu-section-title">Sales & Leads</div>
+            <a href="leads.html" class="menu-item">
+                <span class="menu-icon">🎯</span>
+                <span>Leads</span>
+            </a>
+            <a href="scraped-leads.html" class="menu-item">
+                <span class="menu-icon">✅</span>
+                <span>Scraped Leads</span>
+            </a>
+            
+            <div class="menu-section-title">Clinic Management</div>
+            <a href="appointments.html" class="menu-item">
+                <span class="menu-icon">📅</span>
+                <span>Appointments</span>
+            </a>
+            <a href="followups.html" class="menu-item">
+                <span class="menu-icon">📞</span>
+                <span>Follow-ups</span>
+            </a>
+            <a href="doctors.html" class="menu-item">
+                <span class="menu-icon">👨‍⚕️</span>
+                <span>Doctors</span>
+            </a>
+            <a href="patients.html" class="menu-item">
+                <span class="menu-icon">👥</span>
+                <span>Patients</span>
+            </a>
+            <a href="closed-cases.html" class="menu-item">
+                <span class="menu-icon">✔️</span>
+                <span>Closed Cases</span>
+            </a>
+            
+            <div class="menu-section-title">Finance</div>
+            <a href="invoices.html" class="menu-item">
+                <span class="menu-icon">📄</span>
+                <span>Invoices</span>
+            </a>
+            <a href="campaigns.html" class="menu-item active">
+                <span class="menu-icon">📢</span>
+                <span>Campaigns</span>
+            </a>
+            
+            <div class="menu-section-title">Account</div>
+            <a href="login.html" class="menu-item">
+                <span class="menu-icon">🚪</span>
+                <span>Logout</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div></div>
+        <div class="navbar-right">
+            <button class="navbar-button">
+                🔔
+                <span class="notification-badge">1</span>
+            </button>
+            <button class="user-profile">
+                <div class="user-avatar">A</div>
+                <div style="font-size: 14px;">
+                    <div style="font-weight: 600; color: #111827;">Admin</div>
+                    <div style="font-size: 12px; color: #9ca3af;">Clinic Manager</div>
+                </div>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="page-header">
+            <div class="header-left">
+                <h1 class="page-title">Campaigns</h1>
+                <p class="page-subtitle">Manage marketing campaigns and bulk messaging</p>
+            </div>
+            <button class="btn btn-primary" onclick="openNewCampaignModal()">+ New Campaign</button>
+        </div>
+
+        <!-- Campaigns Cards -->
+        <div class="campaigns-cards">
+            <div class="campaign-card">
+                <div class="campaign-header">
+                    <div class="campaign-title">Valentine's Promo</div>
+                    <span class="campaign-status status-sent">✓ Sent</span>
+                </div>
+                <div class="campaign-detail">
+                    <span class="campaign-detail-label">Recipients:</span>
+                    <span class="campaign-detail-value">324</span>
+                </div>
+                <div class="campaign-detail">
+                    <span class="campaign-detail-label">Open Rate:</span>
+                    <span class="campaign-detail-value">42%</span>
+                </div>
+                <div class="campaign-detail">
+                    <span class="campaign-detail-label">Click Rate:</span>
+                    <span class="campaign-detail-value">18%</span>
+                </div>
+                <div class="campaign-detail">
+                    <span class="campaign-detail-label">Sent Date:</span>
+                    <span class="campaign-detail-value">Feb 10, 2024</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 42%;"></div>
+                </div>
+                <div class="campaign-footer">
+                    <button class="btn btn-secondary btn-sm">View Details</button>
+                </div>
+            </div>
+
+            <div class="campaign-card">
+                <div class="campaign-header">
+                    <div class="campaign-title">Spring Special</div>
+                    <span class="campaign-status status-scheduled">📅 Scheduled</span>
+                </div>
+                <div class="campaign-detail">
+                    <span class="campaign-detail-label">Recipients:</span>
+                    <span class="campaign-detail-value">456</span>
+                </div>
+                <div class="campaign-detail">
+                    <span class="campaign-detail-label">Scheduled For:</span>
+                    <span class="campaign-detail-value">Mar 1, 2024</span>
+                </div>
+                <div class="campaign-detail">
+                    <span class="campaign-detail-label">Message Type:</span>
+                    <span class="campaign-detail-value">Email & SMS</span>
+                </div>
+                <div class="campaign-detail">
+                    <span class="campaign-detail-label">Created:</span>
+                    <span class="campaign-detail-value">Feb 8, 2024</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 0%;"></div>
+                </div>
+                <div class="campaign-footer">
+                    <button class="btn btn-secondary btn-sm">Edit</button>
+                    <button class="btn btn-primary btn-sm">Send Now</button>
+                </div>
+            </div>
+
+            <div class="campaign-card">
+                <div class="campaign-header">
+                    <div class="campaign-title">Feedback Survey</div>
+                    <span class="campaign-status status-sent">✓ Sent</span>
+                </div>
+                <div class="campaign-detail">
+                    <span class="campaign-detail-label">Recipients:</span>
+                    <span class="campaign-detail-value">189</span>
+                </div>
+                <div class="campaign-detail">
+                    <span class="campaign-detail-label">Open Rate:</span>
+                    <span class="campaign-detail-value">58%</span>
+                </div>
+                <div class="campaign-detail">
+                    <span class="campaign-detail-label">Response Rate:</span>
+                    <span class="campaign-detail-value">32%</span>
+                </div>
+                <div class="campaign-detail">
+                    <span class="campaign-detail-label">Sent Date:</span>
+                    <span class="campaign-detail-value">Feb 5, 2024</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 58%;"></div>
+                </div>
+                <div class="campaign-footer">
+                    <button class="btn btn-secondary btn-sm">View Results</button>
+                </div>
+            </div>
+
+            <div class="campaign-card">
+                <div class="campaign-header">
+                    <div class="campaign-title">Referral Program</div>
+                    <span class="campaign-status status-failed">✗ Failed</span>
+                </div>
+                <div class="campaign-detail">
+                    <span class="campaign-detail-label">Recipients:</span>
+                    <span class="campaign-detail-value">212</span>
+                </div>
+                <div class="campaign-detail">
+                    <span class="campaign-detail-label">Success Rate:</span>
+                    <span class="campaign-detail-value">34%</span>
+                </div>
+                <div class="campaign-detail">
+                    <span class="campaign-detail-label">Failed Count:</span>
+                    <span class="campaign-detail-value">22</span>
+                </div>
+                <div class="campaign-detail">
+                    <span class="campaign-detail-label">Sent Date:</span>
+                    <span class="campaign-detail-value">Feb 2, 2024</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 34%; background: linear-gradient(90deg, #ef4444 0%, #f97316 100%);"></div>
+                </div>
+                <div class="campaign-footer">
+                    <button class="btn btn-secondary btn-sm">Retry</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- New Campaign Modal -->
+    <div id="newCampaignModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Create New Campaign</h2>
+            </div>
+            <form>
+                <div class="form-group">
+                    <label for="campaign-name" class="form-label">Campaign Name</label>
+                    <input type="text" id="campaign-name" class="form-input" placeholder="e.g., Spring Promotion">
+                </div>
+                <div class="form-group">
+                    <label for="campaign-message" class="form-label">Message</label>
+                    <textarea id="campaign-message" class="form-textarea" placeholder="Type your campaign message here..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="campaign-recipients" class="form-label">Target Audience</label>
+                    <select id="campaign-recipients" class="form-input">
+                        <option>All Patients</option>
+                        <option>Inactive Patients</option>
+                        <option>Recent Appointments</option>
+                        <option>Scraped Leads</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="campaign-schedule" class="form-label">Send Date</label>
+                    <input type="date" id="campaign-schedule" class="form-input">
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <button type="button" class="btn btn-secondary" style="flex: 1;" onclick="closeNewCampaignModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">Create Campaign</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openNewCampaignModal() {
+            document.getElementById('newCampaignModal').classList.add('active');
+        }
+        
+        function closeNewCampaignModal() {
+            document.getElementById('newCampaignModal').classList.remove('active');
+        }
+        
+        document.getElementById('newCampaignModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeNewCampaignModal();
+            }
+        });
+    </script>
+</body>
+</html>
