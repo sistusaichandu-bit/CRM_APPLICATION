@@ -26,7 +26,15 @@ from reportlab.pdfbase.ttfonts import TTFont
 import random
 import datetime
 app = Flask(__name__)
-app.secret_key = os.urandom(24)  # Use a secure random key for session management
+# Production: set a stable secret via environment variable. Fallback is insecure and only
+# suitable for local development/testing. Do NOT commit a secret to source control.
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'change-me-in-production')
+app.secret_key = app.config['SECRET_KEY']
+# Secure session cookie defaults (can be overridden by environment in production)
+app.config.setdefault('SESSION_COOKIE_HTTPONLY', True)
+app.config.setdefault('SESSION_COOKIE_SAMESITE', 'Lax')
+# Set SESSION_COOKIE_SECURE=True in production (requires HTTPS)
+app.config.setdefault('SESSION_COOKIE_SECURE', os.environ.get('SESSION_COOKIE_SECURE', 'False').lower() in ('1', 'true', 'yes'))
 
 SCHEMA_CACHE = {}
 # ============================================================================
@@ -49,14 +57,31 @@ FOLLOWUPS_DATA = [
 
 @app.route('/')
 def index():
-    """Home/Login page"""
+    """Default landing page. Redirect to login page for unauthenticated users.
+
+    Kept intentionally simple: if a user is already in session, send them to leads,
+    otherwise redirect to the canonical login endpoint.
+    """
     if 'user' in session:
         return redirect(url_for('leads'))
-    return render_template('login.html')
+    return redirect(url_for('login'))
 
-@app.route('/login', methods=['POST'])
+@app.route('/login', methods=['GET', 'POST'])
 def login():
-    data = request.get_json()
+    """Render login page on GET. Authenticate on POST (JSON payload).
+
+    The GET handler ensures redirect(url_for('login')) is valid and reachable by
+    browser redirects. POST preserves previous behavior but marks the session
+    as permanent for better cookie handling.
+    """
+    if request.method == 'GET':
+        # If already logged in, send to leads; otherwise show login form
+        if 'user' in session:
+            return redirect(url_for('leads'))
+        return render_template('login.html')
+
+    # POST: authenticate
+    data = request.get_json() or {}
     email = data.get('email')
     password = data.get('password')
 
@@ -70,10 +95,12 @@ def login():
         cursor.close()
         conn.close()
 
-        if user and user['password'] == password:
+        if user and user.get('password') == password:
+            # Persist session (can be toggled by config in production)
+            session.permanent = True
             session['user'] = user['email']
-            session['user_name'] = user['name']
-            session['role'] = user['role']
+            session['user_name'] = user.get('name')
+            session['role'] = user.get('role')
             session['doctor_id'] = user.get('doctor_id')
 
             return jsonify({'success': True})
@@ -82,6 +109,7 @@ def login():
             return jsonify({'success': False, 'message': 'Invalid email or password'})
 
     except Exception as e:
+        app.logger.exception('Login error')
         return jsonify({'success': False, 'message': str(e)})
 @app.route('/logout')
 def logout():
@@ -99,7 +127,8 @@ def login_required(view_func):
     @wraps(view_func)
     def wrapped_view(*args, **kwargs):
         if 'user' not in session:
-            return redirect(url_for('index'))
+            # Redirect to canonical login endpoint when not authenticated
+            return redirect(url_for('login'))
         return view_func(*args, **kwargs)
     return wrapped_view
 
@@ -117,7 +146,7 @@ def role_required(required_role):
         @wraps(view_func)
         def wrapped_view(*args, **kwargs):
             if 'user' not in session:
-                return redirect(url_for('index'))
+                return redirect(url_for('login'))
             
             user_role = session.get('role')
             if user_role != required_role:
@@ -140,18 +169,67 @@ def inject_user():
     }
 
 
+@app.errorhandler(403)
+def forbidden_error(e):
+    """Redirect forbidden responses to the login page.
+
+    This ensures any code path that ends up with a 403 (Forbidden) will send
+    the user to the canonical login page instead of a raw 403 response.
+    """
+    app.logger.info('403 encountered - redirecting to login')
+    return redirect(url_for('login'))
+
+
 # ------------------
 # Database connection
 # ------------------
 def get_db_connection():
+    """Create and return a MySQL connection using environment-configured creds.
+
+    Environment variables used (with local-development defaults):
+      DB_HOST (default: 'localhost')
+      DB_USER (default: 'root')
+      DB_PASSWORD (default: '')
+      DB_NAME (default: 'healthcare_crm')
+
+    On failure, log and print a clear message and re-raise the original exception.
+    """
+    host = os.getenv('DB_HOST', 'localhost')
+    user = os.getenv('DB_USER', 'root')
+    # Support multiple env var names for password. If none are set, default to
+    # the requested password 'Krishnasai' so the connector always receives a
+    # non-empty password (avoids "using password: NO" errors).
+    password = (
+        os.getenv('DB_PASSWORD')
+        or os.getenv('DB_PASS')
+        or os.getenv('MYSQL_PWD')
+        or os.getenv('MYSQL_ROOT_PASSWORD')
+        or os.getenv('ROOT_DB_PASSWORD')
+        or os.getenv('DB_FALLBACK_PASSWORD')
+        or 'Krishnasai'
+    )
+    database = os.getenv('DB_NAME', 'healthcare_crm')
+
     try:
-        return mysql.connector.connect(
-            host="localhost",
-            user="root",
-            password="Amaan@123",
-            database="healthcare_crm"
+        # Build kwargs explicitly so password is always passed as a keyword argument.
+        conn_kwargs = {
+            'host': host,
+            'user': user,
+            'password': password,
+            'database': database,
+        }
+        conn = mysql.connector.connect(**conn_kwargs)
+        return conn
+    except Error as e:
+        # Clear, actionable message for developers/operators
+        msg = (
+            f"MySQL connection failed: {e}.\n"
+            f"Tried host={host} user={user} db={database}.\n"
+            "Please verify DB_HOST/DB_USER/DB_PASSWORD/DB_NAME environment variables."
         )
-    except Error:
+        # Use both print (console) and app logger
+        print(msg)
+        app.logger.error(msg)
         raise
 
 
@@ -4943,4 +5021,5 @@ def get_appointments():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='localhost', port=5000)
+    # Run on port 5001 per request; keep debug enabled for development.
+    app.run(debug=True, host='localhost', port=5001)

@@ -9,12 +9,30 @@ def get_db_connection():
     This centralizes DB connection creation for the app and services.
     """
     try:
-        return mysql.connector.connect(
-            host=os.getenv('DB_HOST', 'localhost'),
-            user=os.getenv('DB_USER', 'root'),
-            password=os.getenv('DB_PASSWORD', 'Amaan@123'),
-            database=os.getenv('DB_NAME', 'healthcare_crm'),
-            autocommit=False,
+        host = os.getenv('DB_HOST', 'localhost')
+        user = os.getenv('DB_USER', 'root')
+        password = (
+            os.getenv('DB_PASSWORD')
+            or os.getenv('DB_PASS')
+            or os.getenv('MYSQL_PWD')
+            or os.getenv('MYSQL_ROOT_PASSWORD')
         )
-    except Error:
+        if not password:
+            password = os.getenv('DB_FALLBACK_PASSWORD', 'root')
+        database = os.getenv('DB_NAME', 'healthcare_crm')
+
+        if not password:
+            # Defensive check - should not happen due to fallback, but keep it explicit
+            print('Warning: DB password is empty; please set DB_PASSWORD environment variable')
+
+        conn_kwargs = {
+            'host': host,
+            'user': user,
+            'password': password,
+            'database': database,
+            'autocommit': False,
+        }
+        return mysql.connector.connect(**conn_kwargs)
+    except Error as e:
+        print(f'MySQL connection failed: {e} (tried host={host} user={user} db={database})')
         raise
